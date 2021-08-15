@@ -23,16 +23,18 @@ use nx::util;
 use nx::diag::assert;
 use nx::diag::log;
 use nx::fs;
+use nx::svc;
 
 use core::panic;
 
-// We're using 16KB of heap
-static mut STACK_HEAP: [u8; 0x00004000] = [0; 0x00004000];
-
 #[no_mangle]
-pub fn initialize_heap(_hbl_heap: util::PointerAndSize) -> util::PointerAndSize {
-    unsafe {
-        util::PointerAndSize::new(STACK_HEAP.as_mut_ptr(), STACK_HEAP.len())
+pub fn initialize_heap(hbl_heap: util::PointerAndSize) -> util::PointerAndSize {
+    if hbl_heap.is_valid() {
+        hbl_heap
+    } else {
+        let heap_size: usize = 0x00004000;
+        let heap_address = svc::set_heap_size(heap_size).unwrap();
+        util::PointerAndSize::new(heap_address, heap_size)
     }
 }
 
